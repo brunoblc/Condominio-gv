@@ -1,0 +1,19 @@
+# Pastas e arquivos a ignorar
+.claude/
+apps-script/
+old/
+SETUP-SERVICOS.md
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Node (se usar)
+node_modules/
+package-lock.json
