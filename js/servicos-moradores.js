@@ -84,52 +84,124 @@ function renderizarServicos() {
     return;
   }
 
-  servicosGlobal.forEach((servico, index) => {
-    const card = document.createElement('div');
-    card.className = 'card-servico';
+  const grupos = agruparPorMes(servicosGlobal);
 
-    // Badge da categoria com cor
-    const corCategoria = obterCorCategoria(servico.categoria);
+  grupos.forEach((grupo, grupoIdx) => {
+    const details = document.createElement('details');
+    details.className = 'grupo-mes';
+    if (grupoIdx === 0) details.open = true; // mais recente já aberto
 
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="header-info">
-          <h2 class="titulo-servico">${servico.titulo}</h2>
-          <span class="badge" style="background: ${corCategoria};">${servico.categoria}</span>
+    const plural = grupo.servicos.length === 1 ? 'serviço' : 'serviços';
+
+    details.innerHTML = `
+      <summary class="grupo-header">
+        <div class="grupo-header-left">
+          <span class="grupo-chevron">▶</span>
+          <span class="grupo-label">${grupo.label}</span>
         </div>
-        <div class="meta-rapida">
-          <div class="meta-item">
-            <span class="meta-label">Data</span>
-            <span class="meta-valor">${formatarData(servico.data)}</span>
-          </div>
-          <div class="meta-item">
-            <span class="meta-label">Valor</span>
-            <span class="meta-valor">${formatarValor(servico.valor)}</span>
-          </div>
-        </div>
-      </div>
-
-      ${servico.descricao ? `<div class="descricao-servico">${servico.descricao}</div>` : ''}
-
-      <div class="fotos-container" id="fotos-${index}">
-        ${renderizarFotos(servico, index)}
-      </div>
-
-      <div class="card-footer">
-        <span class="status-badge status-${servico.status.toLowerCase()}">${servico.status}</span>
-      </div>
+        <span class="grupo-count">${grupo.servicos.length} ${plural}</span>
+      </summary>
+      <div class="grupo-servicos"></div>
     `;
 
-    container.appendChild(card);
+    const innerContainer = details.querySelector('.grupo-servicos');
 
-    // Configurar toggle antes/depois se houver fotos
-    if (servico.fotoAntes && servico.fotoDepois) {
-      const toggleBtn = document.getElementById(`toggle-${index}`);
-      if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => toggleFoto(index));
+    grupo.servicos.forEach((servico) => {
+      const index = servicosGlobal.indexOf(servico); // índice global pra toggle
+      const corCategoria = obterCorCategoria(servico.categoria);
+
+      const card = document.createElement('div');
+      card.className = 'card-servico';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="header-info">
+            <h2 class="titulo-servico">${servico.titulo}</h2>
+            <span class="badge" style="background: ${corCategoria};">${servico.categoria}</span>
+          </div>
+          <div class="meta-rapida">
+            <div class="meta-item">
+              <span class="meta-label">Data</span>
+              <span class="meta-valor">${formatarData(servico.data)}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Valor</span>
+              <span class="meta-valor">${formatarValor(servico.valor)}</span>
+            </div>
+          </div>
+        </div>
+
+        ${servico.descricao ? `<div class="descricao-servico">${servico.descricao}</div>` : ''}
+
+        <div class="fotos-container" id="fotos-${index}">
+          ${renderizarFotos(servico, index)}
+        </div>
+
+        <div class="card-footer">
+          <span class="status-badge status-${servico.status.toLowerCase()}">${servico.status}</span>
+        </div>
+      `;
+
+      innerContainer.appendChild(card);
+
+      if (servico.fotoAntes && servico.fotoDepois) {
+        const toggleBtn = card.querySelector(`#toggle-${index}`);
+        if (toggleBtn) {
+          toggleBtn.addEventListener('click', () => toggleFoto(index));
+        }
       }
-    }
+    });
+
+    container.appendChild(details);
   });
+}
+
+// ============================================
+// 📅 AGRUPAMENTO POR MÊS
+// ============================================
+
+function agruparPorMes(servicos) {
+  const grupos = {};
+  servicos.forEach((s) => {
+    const d = parseData(s.data);
+    const chave = d
+      ? `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`
+      : 'sem-data';
+    if (!grupos[chave]) {
+      grupos[chave] = {
+        chave,
+        data: d,
+        label: d ? formatarLabelMes(d) : 'Sem data',
+        servicos: []
+      };
+    }
+    grupos[chave].servicos.push(s);
+  });
+
+  return Object.values(grupos).sort((a, b) => {
+    if (!a.data) return 1;
+    if (!b.data) return -1;
+    return b.data - a.data;
+  });
+}
+
+function parseData(valor) {
+  if (!valor) return null;
+  const str = String(valor);
+  if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m) {
+    return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  }
+  return null;
+}
+
+function formatarLabelMes(d) {
+  const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  return `${meses[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function renderizarFotos(servico, index) {

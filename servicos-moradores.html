@@ -129,7 +129,81 @@ html, body {
 #containerServicos {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+}
+
+/* GRUPO COLAPSÁVEL POR MÊS */
+.grupo-mes {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.grupo-mes[open] {
+  border-color: var(--gold);
+}
+
+.grupo-header {
+  padding: 16px 20px;
+  background: var(--bg3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  user-select: none;
+  list-style: none;
+  transition: background 0.15s;
+}
+
+.grupo-header::-webkit-details-marker { display: none; }
+.grupo-header:hover { background: var(--bg4); }
+
+.grupo-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.grupo-chevron {
+  font-family: 'Barlow Condensed', sans-serif;
+  color: var(--gold);
+  font-size: 18px;
+  font-weight: 900;
+  transition: transform 0.2s;
+  display: inline-block;
+  width: 14px;
+}
+
+.grupo-mes[open] .grupo-chevron { transform: rotate(90deg); }
+
+.grupo-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.grupo-count {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  background: var(--bg2);
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+.grupo-servicos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
 }
 
 .card-servico {
@@ -403,38 +477,54 @@ html, body {
   font-weight: 600;
 }
 
-/* RESPONSIVO */
+/* RESPONSIVO — fontes maiores no mobile pra leitura confortável */
 @media (max-width: 600px) {
+  html, body {
+    font-size: 17px;
+  }
+
   .header-content {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .titulo-servico {
-    font-size: 18px;
-  }
+  .header-info h1 { font-size: 22px; }
+  .header-info p { font-size: 13px; }
+
+  .container { padding: 20px 15px; }
+  .container-header h2 { font-size: 26px; }
+  .container-header p { font-size: 14px; }
+
+  .grupo-header { padding: 18px 16px; }
+  .grupo-label { font-size: 20px; }
+  .grupo-count { font-size: 13px; padding: 5px 12px; }
+  .grupo-servicos { padding: 14px; gap: 14px; }
+
+  .card-header { padding: 18px 16px; }
+  .titulo-servico { font-size: 22px; }
+  .badge { font-size: 12px; padding: 6px 12px; }
 
   .meta-rapida {
     width: 100%;
-    gap: 12px;
+    gap: 16px;
+  }
+  .meta-label { font-size: 12px; }
+  .meta-valor { font-size: 17px; }
+
+  .descricao-servico {
+    font-size: 15px;
+    padding: 0 16px;
   }
 
-  .container {
-    padding: 20px 15px;
-  }
-
-  .card-header {
-    padding: 16px;
-  }
-
-  .fotos-container {
-    padding: 16px;
-  }
+  .fotos-container { padding: 16px; }
 
   .toggle-btn {
-    padding: 10px;
-    font-size: 12px;
+    padding: 14px;
+    font-size: 14px;
   }
+
+  .card-footer { padding: 14px 16px; }
+  .status-badge { font-size: 12px; padding: 7px 14px; }
 }
 </style>
 </head>
