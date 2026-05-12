@@ -3,8 +3,8 @@
 // ============================================
 
 // 📝 CONFIGURAÇÃO
-// URL do Apps Script (ativa quando hospedar em GitHub Pages)
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBjDR7aa1g0JKezEExhlzBSW5BrHGtrMy8R0FLUr3aTgfOZYHHhFJTzqTnSgTxhgEB/exec';
+// URL do Apps Script com CORS proxy
+const APPS_SCRIPT_URL = 'https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycbxBjDR7aa1g0JKezEExhlzBSW5BrHGtrMy8R0FLUr3aTgfOZYHHhFJTzqTnSgTxhgEB/exec';
 
 // Mock local para testes - funciona sem CORS
 const USAR_MOCK_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
