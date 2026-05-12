@@ -100,19 +100,21 @@ async function enviarServico(event) {
         fotoDepois
       });
     } else {
-      // API Real (GitHub Pages)
+      // API Real — form-encoded sobrevive ao redirect do Apps Script
+      const payload = new URLSearchParams();
+      payload.append('data', JSON.stringify({
+        senha: ADMIN_PASSWORD,
+        titulo,
+        categoria,
+        data,
+        valor,
+        descricao,
+        fotoAntes,
+        fotoDepois
+      }));
       const response = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
-        payload: JSON.stringify({
-          senha: ADMIN_PASSWORD,
-          titulo,
-          categoria,
-          data,
-          valor,
-          descricao,
-          fotoAntes,
-          fotoDepois
-        })
+        body: payload
       });
       resultado = await response.json();
     }

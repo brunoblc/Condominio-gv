@@ -43,7 +43,7 @@ async function carregarServicos() {
         total: servicos.length
       };
     } else {
-      // API Real
+      // API Real — GET simples, sem headers custom (evita preflight)
       const response = await fetch(APPS_SCRIPT_URL);
       data = await response.json();
     }
