@@ -100,11 +100,11 @@ function renderizarServicos() {
         <div class="meta-rapida">
           <div class="meta-item">
             <span class="meta-label">Data</span>
-            <span class="meta-valor">${servico.data}</span>
+            <span class="meta-valor">${formatarData(servico.data)}</span>
           </div>
           <div class="meta-item">
             <span class="meta-label">Valor</span>
-            <span class="meta-valor">${servico.valor}</span>
+            <span class="meta-valor">${formatarValor(servico.valor)}</span>
           </div>
         </div>
       </div>
@@ -133,8 +133,10 @@ function renderizarServicos() {
 }
 
 function renderizarFotos(servico, index) {
-  const temAntes = servico.fotoAntes && servico.fotoAntes.length > 0;
-  const temDepois = servico.fotoDepois && servico.fotoDepois.length > 0;
+  const urlAntes = transformarFotoUrl(servico.fotoAntes);
+  const urlDepois = transformarFotoUrl(servico.fotoDepois);
+  const temAntes = urlAntes && urlAntes.length > 0;
+  const temDepois = urlDepois && urlDepois.length > 0;
 
   if (!temAntes && !temDepois) {
     return '<p class="aviso">Sem fotos</p>';
@@ -144,8 +146,8 @@ function renderizarFotos(servico, index) {
     return `
       <div class="slider-foto">
         <div class="slider-img">
-          <img id="img-antes-${index}" src="${servico.fotoAntes}" alt="Foto Antes" class="img-ativa">
-          <img id="img-depois-${index}" src="${servico.fotoDepois}" alt="Foto Depois" class="img-inativa">
+          <img id="img-antes-${index}" src="${urlAntes}" alt="Foto Antes" class="img-ativa">
+          <img id="img-depois-${index}" src="${urlDepois}" alt="Foto Depois" class="img-inativa">
         </div>
         <button id="toggle-${index}" class="toggle-btn">
           <span class="toggle-label">Antes/Depois</span>
@@ -155,10 +157,47 @@ function renderizarFotos(servico, index) {
   }
 
   if (temAntes) {
-    return `<div class="foto-box"><img src="${servico.fotoAntes}" alt="Foto Antes"></div>`;
+    return `<div class="foto-box"><img src="${urlAntes}" alt="Foto Antes"></div>`;
   }
 
-  return `<div class="foto-box"><img src="${servico.fotoDepois}" alt="Foto Depois"></div>`;
+  return `<div class="foto-box"><img src="${urlDepois}" alt="Foto Depois"></div>`;
+}
+
+function transformarFotoUrl(url) {
+  if (!url) return '';
+  const str = String(url);
+  // Já é thumbnail (vindo do Apps Script novo) — passa direto
+  if (str.includes('drive.google.com/thumbnail')) return str;
+  // Extrai fileId do formato viewer (entries antigas)
+  const match = str.match(/\/file\/d\/([^\/]+)|[?&]id=([^&]+)/);
+  const fileId = match ? (match[1] || match[2]) : null;
+  if (!fileId) return str;
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w2000`;
+}
+
+function formatarData(valor) {
+  if (!valor) return '—';
+  const str = String(valor);
+  // ISO string (ex: 2026-05-11T03:00:00.000Z)
+  if (/\d{4}-\d{2}-\d{2}T/.test(str)) {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('pt-BR');
+    }
+  }
+  return str;
+}
+
+function formatarValor(valor) {
+  if (valor === null || valor === undefined || valor === '') return '—';
+  const str = String(valor).trim();
+  // Já vem formatado em R$
+  if (str.includes('R$')) return str;
+  // Tenta parsear: aceita "550", "550.00", "550,00", "1.200,50"
+  const limpo = str.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '');
+  const numero = Number(limpo);
+  if (isNaN(numero)) return str;
+  return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function toggleFoto(index) {
