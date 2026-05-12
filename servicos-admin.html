@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Serviços — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #191919;
+  --bg4: #222222;
+  --border: rgba(255,255,255,0.07);
+  --border-gold: rgba(245,168,0,0.3);
+  --text: #f0ede6;
+  --muted: #888070;
+  --gold: #f5a800;
+  --gold2: #ffc740;
+  --red: #e05555;
+  --green: #4caf50;
+  --radius: 4px;
+}
+
+html, body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* TELA DE SENHA */
+#telaSenha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-box {
+  background: var(--bg2);
+  border: 1px solid var(--border-gold);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.7);
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-title h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.login-title p {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,168,0,0.1);
+}
+
+.btn-login, .btn-primario {
+  width: 100%;
+  padding: 12px;
+  background: var(--gold);
+  border: none;
+  border-radius: var(--radius);
+  color: #0a0a0a;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-login:hover, .btn-primario:hover {
+  background: var(--gold2);
+}
+
+.btn-login:active, .btn-primario:active {
+  transform: scale(0.98);
+}
+
+.btn-secundario {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  color: var(--gold);
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-secundario:hover {
+  background: rgba(245,168,0,0.1);
+  border-color: var(--gold2);
+  color: var(--gold2);
+}
+
+/* TELA ADMIN */
+#telaAdmin {
+  display: none;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.admin-title h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-title h1 span {
+  color: var(--gold);
+}
+
+.btn-logout {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-logout:hover {
+  background: rgba(224,85,85,0.1);
+}
+
+/* GRID DO ADMIN */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.painel {
+  background: var(--bg2);
+  border: 1px solid var(--border-gold);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.7);
+}
+
+.painel-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.painel-title .icone {
+  margin-right: 8px;
+}
+
+/* UPLOAD DE FOTOS */
+.foto-upload {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg3);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.foto-upload:hover {
+  border-color: var(--gold);
+  background: var(--bg4);
+}
+
+.foto-upload input {
+  display: none;
+}
+
+.foto-upload-label {
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.foto-preview {
+  margin-top: 12px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-height: 200px;
+}
+
+.foto-preview img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* LISTA DE SERVIÇOS */
+.card-servico-admin {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.15s;
+}
+
+.card-servico-admin:hover {
+  border-color: var(--gold);
+  background: var(--bg4);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.card-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+
+.badge-categoria {
+  background: rgba(245,168,0,0.2);
+  color: var(--gold);
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.card-info p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.descricao {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.8;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* QR CODE */
+.qr-box {
+  text-align: center;
+  padding: 20px;
+  background: var(--bg3);
+  border-radius: var(--radius);
+}
+
+.qr-box h3 {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.qr-box img {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 16px;
+  border-radius: 3px;
+}
+
+.qr-url {
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+  margin-bottom: 12px;
+  background: var(--bg2);
+  padding: 8px 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border-gold);
+  border-left: 3px solid var(--gold);
+  color: var(--text);
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+  font-size: 14px;
+  max-width: 400px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.toast-sucesso {
+  border-left-color: var(--green);
+}
+
+.toast-erro {
+  border-left-color: var(--red);
+}
+
+@media (max-width: 600px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .painel {
+    padding: 16px;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- TELA DE SENHA -->
+<div id="telaSenha">
+  <div class="login-box">
+    <div class="login-title">
+      <h1><span>GV</span> Serviços</h1>
+      <p>Painel Administrativo</p>
+    </div>
+    <form onsubmit="fazerLogin(event)">
+      <div class="form-group">
+        <label for="senhaAdmin">Senha de Acesso</label>
+        <input type="password" id="senhaAdmin" placeholder="••••••" required autofocus>
+      </div>
+      <button type="submit" class="btn-login">Acessar →</button>
+    </form>
+  </div>
+</div>
+
+<!-- TELA ADMIN -->
+<div id="telaAdmin">
+  <div class="admin-container">
+
+    <div class="admin-header">
+      <div class="admin-title">
+        <span>🔧</span>
+        <h1>Gerenciamento de <span>Serviços</span></h1>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sair →</button>
+    </div>
+
+    <div class="admin-grid">
+
+      <!-- FORMULÁRIO -->
+      <div class="painel">
+        <div class="painel-title">📋 Novo Serviço</div>
+        <form id="formularioServico" onsubmit="enviarServico(event)">
+
+          <div class="form-group">
+            <label for="titulo">Título do Serviço</label>
+            <input type="text" id="titulo" placeholder="Ex: Pintura das vagas de garagem" required>
+          </div>
+
+          <div class="form-group">
+            <label for="categoria">Categoria</label>
+            <select id="categoria">
+              <option value="Pintura">🎨 Pintura</option>
+              <option value="Elétrica">⚡ Elétrica</option>
+              <option value="Hidráulica">💧 Hidráulica</option>
+              <option value="Limpeza">🧹 Limpeza</option>
+              <option value="Manutenção">🔨 Manutenção</option>
+              <option value="Outros">📌 Outros</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="data">Data do Serviço</label>
+            <input type="date" id="data" required>
+          </div>
+
+          <div class="form-group">
+            <label for="valor">Valor (opcional)</label>
+            <input type="text" id="valor" placeholder="Ex: R$ 1.200,00">
+          </div>
+
+          <div class="form-group">
+            <label for="descricao">Descrição (opcional)</label>
+            <textarea id="descricao" placeholder="Detalhes adicionais..." style="resize: vertical; min-height: 80px;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Foto Antes *</label>
+            <div class="foto-upload" onclick="document.getElementById('inputFotoAntes').click();">
+              <input type="file" id="inputFotoAntes" accept="image/*" onchange="handleFotoChange(event, 'Antes')" required>
+              <label for="inputFotoAntes" class="foto-upload-label">
+                📸 Clique para selecionar foto ANTES
+              </label>
+            </div>
+            <div id="previewAntes" class="foto-preview"></div>
+            <input type="hidden" id="fotoDataAntes">
+          </div>
+
+          <div class="form-group">
+            <label>Foto Depois *</label>
+            <div class="foto-upload" onclick="document.getElementById('inputFotoDepois').click();">
+              <input type="file" id="inputFotoDepois" accept="image/*" onchange="handleFotoChange(event, 'Depois')" required>
+              <label for="inputFotoDepois" class="foto-upload-label">
+                📸 Clique para selecionar foto DEPOIS
+              </label>
+            </div>
+            <div id="previewDepois" class="foto-preview"></div>
+            <input type="hidden" id="fotoDataDepois">
+          </div>
+
+          <button type="submit" class="btn-primario">Cadastrar Serviço →</button>
+        </form>
+      </div>
+
+      <!-- PAINEL LATERAL -->
+      <div>
+        <!-- QR CODE -->
+        <div class="painel">
+          <div class="painel-title">🔗 QRCode</div>
+          <div id="qrContainer"></div>
+        </div>
+
+        <!-- ÚLTIMOS SERVIÇOS -->
+        <div class="painel" style="margin-top: 20px;">
+          <div class="painel-title">📊 Últimos Serviços</div>
+          <div id="listaServicosAdmin"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="js/servicos-admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acompanhamento de Serviços — Condomínio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #191919;
+  --bg4: #222222;
+  --border: rgba(255,255,255,0.07);
+  --text: #f0ede6;
+  --muted: #888070;
+  --gold: #f5a800;
+  --gold2: #ffc740;
+  --gold-dim: rgba(245,168,0,0.12);
+  --radius: 4px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* HEADER */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo-badge {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 2px solid var(--gold);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.logo-badge span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: var(--gold);
+  letter-spacing: -1px;
+}
+
+.header-info h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.header-info p {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* CONTAINER PRINCIPAL */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+.container-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.container-header h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.container-header p {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+/* CARD DO SERVIÇO */
+#containerServicos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-servico {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card-servico:hover {
+  border-color: var(--gold);
+  box-shadow: 0 8px 32px rgba(245,168,0,0.1);
+}
+
+.card-header {
+  padding: 20px;
+  background: var(--bg2);
+}
+
+.header-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.titulo-servico {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.3;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: white;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.meta-rapida {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.meta-valor {
+  font-size: 14px;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* DESCRIÇÃO */
+.descricao-servico {
+  padding: 0 20px;
+  margin-bottom: 0;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+/* CONTAINER DE FOTOS */
+.fotos-container {
+  padding: 20px;
+  background: var(--bg3);
+}
+
+.slider-foto {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.slider-img {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%;
+  overflow: hidden;
+}
+
+.slider-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.4s ease;
+}
+
+.img-inativa {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.img-ativa {
+  opacity: 1;
+}
+
+.toggle-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--gold);
+  border: none;
+  color: #0a0a0a;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggle-btn:hover {
+  background: var(--gold2);
+}
+
+.toggle-label {
+  display: inline-block;
+}
+
+.toggle-btn::after {
+  content: ' ↔️';
+}
+
+/* FOTO SIMPLES */
+.foto-box {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg);
+  width: 100%;
+}
+
+.foto-box img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* STATUS */
+.card-footer {
+  padding: 16px 20px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: inline-block;
+}
+
+.status-concluído {
+  background: rgba(76,175,80,0.2);
+  color: #4caf50;
+}
+
+.status-em-andamento {
+  background: rgba(255,193,7,0.2);
+  color: #ffc107;
+}
+
+.status-planejado {
+  background: rgba(77,96,255,0.2);
+  color: #4d60ff;
+}
+
+/* AVISO/ERRO */
+.aviso {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+/* SKELETON LOADER */
+.skeleton-loader {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.skeleton-item {
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  height: 300px;
+  border-radius: var(--radius);
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* TOAST */
+#toast {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  color: var(--text);
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+  font-size: 14px;
+  max-width: 400px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.toast-aviso {
+  border-left-color: #ffc107;
+}
+
+/* FOOTER */
+.footer {
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+}
+
+#footerAtualizacao {
+  font-weight: 600;
+}
+
+/* RESPONSIVO */
+@media (max-width: 600px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .titulo-servico {
+    font-size: 18px;
+  }
+
+  .meta-rapida {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .container {
+    padding: 20px 15px;
+  }
+
+  .card-header {
+    padding: 16px;
+  }
+
+  .fotos-container {
+    padding: 16px;
+  }
+
+  .toggle-btn {
+    padding: 10px;
+    font-size: 12px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-content">
+    <div class="logo-badge">
+      <span>GV</span>
+    </div>
+    <div class="header-info">
+      <h1>GV Serviços</h1>
+      <p>Acompanhamento de Trabalhos Realizados</p>
+    </div>
+  </div>
+</header>
+
+<!-- CONTAINER PRINCIPAL -->
+<div class="container">
+
+  <div class="container-header">
+    <h2>📋 Serviços Realizados</h2>
+    <p>Veja antes e depois de cada trabalho executado</p>
+  </div>
+
+  <div id="containerServicos"></div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div id="footerAtualizacao">Carregando...</div>
+  <p style="margin-top: 8px; opacity: 0.6;">Atualização automática a cada hora</p>
+</footer>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script src="js/servicos-moradores.js"></script>
+</body>
+</html>
