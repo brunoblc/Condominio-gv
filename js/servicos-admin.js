@@ -200,8 +200,8 @@ function mostrarQRCode() {
     // Teste local
     urlMoradores = `http://${window.location.hostname}:${window.location.port}/servicos-moradores.html`;
   } else {
-    // GitHub Pages (você atualiza quando fizer deploy)
-    urlMoradores = 'https://seuusername.github.io/condominio-gv-servicos/servicos-moradores.html'; // 📝 MUDE ISSO! Coloque sua URL real do GitHub Pages
+    // GitHub Pages
+    urlMoradores = 'https://brunoblc.github.io/Condominio-gv/servicos-moradores.html';
   }
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(urlMoradores)}&size=300x300`;
