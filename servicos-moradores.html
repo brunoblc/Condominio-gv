@@ -223,6 +223,31 @@ html, body {
 .card-header {
   padding: 20px;
   background: var(--bg2);
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.card-header::-webkit-details-marker { display: none; }
+.card-header:hover { background: var(--bg3); }
+
+.card-chevron {
+  position: absolute;
+  top: 22px;
+  right: 18px;
+  font-family: 'Barlow Condensed', sans-serif;
+  color: var(--gold);
+  font-size: 16px;
+  font-weight: 900;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.card-servico[open] .card-chevron { transform: rotate(90deg); }
+
+.card-servico .header-info {
+  padding-right: 28px; /* espaço pro chevron */
 }
 
 .header-info {

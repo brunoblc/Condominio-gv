@@ -110,10 +110,11 @@ function renderizarServicos() {
       const index = servicosGlobal.indexOf(servico); // índice global pra toggle
       const corCategoria = obterCorCategoria(servico.categoria);
 
-      const card = document.createElement('div');
+      const card = document.createElement('details');
       card.className = 'card-servico';
       card.innerHTML = `
-        <div class="card-header">
+        <summary class="card-header">
+          <span class="card-chevron">▶</span>
           <div class="header-info">
             <h2 class="titulo-servico">${servico.titulo}</h2>
             <span class="badge" style="background: ${corCategoria};">${servico.categoria}</span>
@@ -128,7 +129,7 @@ function renderizarServicos() {
               <span class="meta-valor">${formatarValor(servico.valor)}</span>
             </div>
           </div>
-        </div>
+        </summary>
 
         ${servico.descricao ? `<div class="descricao-servico">${servico.descricao}</div>` : ''}
 
