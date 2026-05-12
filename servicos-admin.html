@@ -193,21 +193,33 @@ html, body {
 }
 
 .btn-logout {
-  padding: 8px 16px;
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: rgba(224,85,85,0.15);
   border: 1px solid var(--red);
   border-radius: var(--radius);
   color: var(--red);
-  font-size: 12px;
-  font-weight: 600;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   cursor: pointer;
   transition: all 0.15s;
+  white-space: nowrap;
+  width: auto;
+  flex: 0 0 auto;
 }
 
 .btn-logout:hover {
-  background: rgba(224,85,85,0.1);
+  background: var(--red);
+  color: #fff;
+}
+
+.btn-logout:active {
+  transform: scale(0.97);
 }
 
 /* GRID DO ADMIN */
