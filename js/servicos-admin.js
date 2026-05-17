@@ -193,17 +193,42 @@ function cancelarFormCond() {
 function handleLogoCondChange(event) {
   const file = event.target.files[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = (e) => {
-    const base64 = e.target.result;
-    document.getElementById('logoCondBase64').value = base64;
-    const preview = document.getElementById('previewLogoCond');
-    preview.style.display = 'flex';
-    preview.innerHTML = `
-      <img src="${base64}" alt="Pré-visualização">
-      <button type="button" class="logo-remover" onclick="limparLogoCond()">Remover</button>
-    `;
+    const img = new Image();
+    img.onload = () => {
+      // Redimensiona pra no máximo 400x400 (suficiente pra logo)
+      const MAX = 400;
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+      if (w >= h && w > MAX) {
+        h = Math.round(h * (MAX / w));
+        w = MAX;
+      } else if (h > MAX) {
+        w = Math.round(w * (MAX / h));
+        h = MAX;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      // PNG mantém transparência (logos costumam ter)
+      const base64 = canvas.toDataURL('image/png');
+
+      document.getElementById('logoCondBase64').value = base64;
+      const preview = document.getElementById('previewLogoCond');
+      preview.style.display = 'flex';
+      preview.innerHTML = `
+        <img src="${base64}" alt="Pré-visualização">
+        <button type="button" class="logo-remover" onclick="limparLogoCond()">Remover</button>
+      `;
+    };
+    img.onerror = () => mostrarErro('Não foi possível ler a imagem. Tente um PNG ou JPG.');
+    img.src = e.target.result;
   };
+  reader.onerror = () => mostrarErro('Erro ao ler o arquivo.');
   reader.readAsDataURL(file);
 }
 
