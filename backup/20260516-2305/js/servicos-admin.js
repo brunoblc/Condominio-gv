@@ -10,322 +10,34 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBjDR7aa1g0JKe
 const USAR_MOCK_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const ADMIN_PASSWORD = 'admin2024'; // Mesma senha do Apps Script
 
-// Estado de sessão
-let sessao = {
-  autenticado: false,
-  escopo: null,       // 'admin' | 'cond'
-  slug: null,         // slug do cond ativo (quando escopo === 'cond' OU admin escolheu um)
-  nomeCond: null,     // nome amigável do cond ativo
-  senha: null         // senha em uso (admin ou utilizador) — necessária pra calls subsequentes
-};
+let autenticado = false;
 let servicosCache = [];
-let condominiosCache = [];
 let servicoEmEdicao = null; // id do serviço sendo editado (null = modo criação)
-
-// Slug solicitado pela URL (?c=xxx)
-const slugUrl = new URLSearchParams(window.location.search).get('c');
 
 // ============================================
 // 🔐 AUTENTICAÇÃO
 // ============================================
 
-async function fazerLogin(event) {
+function fazerLogin(event) {
   event.preventDefault();
   const senha = document.getElementById('senhaAdmin').value;
 
-  try {
-    const resultado = await chamarLogin(senha, slugUrl);
-    if (!resultado.sucesso) {
-      mostrarErro(resultado.erro || 'Senha incorreta');
-      return;
-    }
-
-    sessao.autenticado = true;
-    sessao.escopo = resultado.escopo;
-    sessao.senha = senha;
-
+  if (senha === ADMIN_PASSWORD) {
+    autenticado = true;
     document.getElementById('telaSenha').style.display = 'none';
-
-    if (slugUrl) {
-      // Modo cond (utilizador OU admin acessando link específico)
-      sessao.slug = slugUrl;
-      sessao.nomeCond = (resultado.cond && resultado.cond.nome) || slugUrl;
-      entrarPainelCondominio(sessao.slug, sessao.nomeCond);
-    } else {
-      // Admin sem slug → lista de condomínios
-      if (resultado.escopo !== 'admin') {
-        mostrarErro('Acesso restrito ao administrador');
-        return;
-      }
-      mostrarListaCondominios();
-    }
-  } catch (erro) {
-    mostrarErro('Erro na comunicação: ' + erro.message);
+    document.getElementById('telaAdmin').style.display = 'block';
+    carregarServicosAdmin();
+    mostrarQRCode();
+  } else {
+    mostrarErro('Senha incorreta');
   }
-}
-
-async function chamarLogin(senha, slug) {
-  if (USAR_MOCK_LOCAL) return loginLocal(senha, slug);
-
-  const payload = new URLSearchParams();
-  payload.append('data', JSON.stringify({
-    acao: 'login',
-    senha: senha,
-    condominioSlug: slug || undefined
-  }));
-  const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: payload });
-  return await response.json();
 }
 
 function logout() {
-  sessao = { autenticado: false, escopo: null, slug: null, nomeCond: null, senha: null };
+  autenticado = false;
   document.getElementById('telaSenha').style.display = 'flex';
-  document.getElementById('telaCondominios').style.display = 'none';
   document.getElementById('telaAdmin').style.display = 'none';
   document.getElementById('senhaAdmin').value = '';
-}
-
-function voltarParaCondominios() {
-  if (sessao.escopo !== 'admin') return; // só admin pode voltar
-  sessao.slug = null;
-  sessao.nomeCond = null;
-  servicoEmEdicao = null;
-  document.getElementById('telaAdmin').style.display = 'none';
-  mostrarListaCondominios();
-}
-
-// ============================================
-// 🏢 CONDOMÍNIOS (somente admin)
-// ============================================
-
-async function mostrarListaCondominios() {
-  document.getElementById('telaCondominios').style.display = 'block';
-  document.getElementById('telaAdmin').style.display = 'none';
-  await carregarCondominios();
-}
-
-async function carregarCondominios() {
-  try {
-    let resultado;
-    if (USAR_MOCK_LOCAL) {
-      resultado = listarCondominiosLocal();
-    } else {
-      const payload = new URLSearchParams();
-      payload.append('data', JSON.stringify({ acao: 'listarCondominios', senha: sessao.senha }));
-      const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: payload });
-      resultado = await response.json();
-    }
-
-    if (!resultado.sucesso) {
-      mostrarErro(resultado.erro || 'Erro ao listar condomínios');
-      return;
-    }
-
-    condominiosCache = resultado.condominios || [];
-    renderizarCondominios(resultado.orfaos || 0);
-  } catch (erro) {
-    mostrarErro('Erro na comunicação: ' + erro.message);
-  }
-}
-
-function renderizarCondominios(orfaos) {
-  const container = document.getElementById('listaCondominios');
-  const banner = document.getElementById('bannerOrfaos');
-
-  // Banner de órfãos: só aparece se tiver órfãos E ainda não houver cond
-  if (orfaos > 0 && condominiosCache.length === 0) {
-    banner.style.display = 'block';
-    banner.innerHTML = `⚠️ Você tem <strong>${orfaos}</strong> serviço(s) existente(s) sem condomínio. Crie o primeiro condomínio abaixo e marque a opção pra vincular.`;
-    // Já abre o form automaticamente
-    abrirFormAdicionarCond(orfaos);
-  } else {
-    banner.style.display = 'none';
-  }
-
-  if (condominiosCache.length === 0) {
-    container.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 40px;">Nenhum condomínio cadastrado. Clique em "Adicionar Condomínio" pra começar.</p>';
-    return;
-  }
-
-  container.innerHTML = '';
-  const origem = window.location.origin + window.location.pathname.replace(/[^/]+$/, '');
-  condominiosCache.forEach(cond => {
-    const urlUtilizador = `${origem}servicos-admin.html?c=${cond.slug}`;
-    const urlMoradores = `${origem}servicos-moradores.html?c=${cond.slug}`;
-    const slugEsc = String(cond.slug).replace(/'/g, "\\'");
-    const nomeEsc = String(cond.nome).replace(/'/g, "\\'");
-
-    const card = document.createElement('div');
-    card.className = 'cond-card';
-    card.innerHTML = `
-      <div class="cond-card-header">
-        <div>
-          <h3>${escapeHtml(cond.nome)}</h3>
-          <div class="cond-slug">${escapeHtml(cond.slug)}</div>
-        </div>
-      </div>
-      <div class="cond-urls">
-        <div><strong>Utilizador:</strong> <span title="${urlUtilizador}">${urlUtilizador}</span></div>
-        <div><strong>Moradores (QR):</strong> <span title="${urlMoradores}">${urlMoradores}</span></div>
-        <div><strong>Senha utilizador:</strong> <code>${escapeHtml(cond.senhaUtilizador || '')}</code></div>
-      </div>
-      <div class="cond-acoes">
-        <button onclick="entrarComoAdmin('${slugEsc}', '${nomeEsc}')">🔧 Gerenciar</button>
-        <button onclick="copiarTexto('${urlUtilizador.replace(/'/g, "\\'")}','Link utilizador copiado')">📋 Link utilizador</button>
-        <button onclick="copiarTexto('${urlMoradores.replace(/'/g, "\\'")}','Link moradores copiado')">📋 Link moradores</button>
-        <button class="btn-excluir-cond" onclick="confirmarExclusaoCond('${slugEsc}','${nomeEsc}')">🗑️ Excluir</button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function abrirFormAdicionarCond(qtdOrfaos) {
-  document.getElementById('formAdicionarCondWrap').style.display = 'block';
-  document.getElementById('condNome').value = '';
-  document.getElementById('condSlug').value = '';
-  document.getElementById('condSenha').value = '';
-
-  if (qtdOrfaos && qtdOrfaos > 0) {
-    document.getElementById('formGrupoOrfaos').style.display = 'block';
-    document.getElementById('qtdOrfaos').textContent = qtdOrfaos;
-    document.getElementById('condMigrarOrfaos').checked = true;
-    // sugerir nome + slug "GV Principal"
-    document.getElementById('condNome').value = 'GV Principal';
-    document.getElementById('condSlug').value = 'gv-principal';
-  } else {
-    document.getElementById('formGrupoOrfaos').style.display = 'none';
-  }
-
-  document.getElementById('condNome').focus();
-}
-
-function cancelarFormCond() {
-  document.getElementById('formAdicionarCondWrap').style.display = 'none';
-}
-
-function atualizarSlugAuto() {
-  const nome = document.getElementById('condNome').value;
-  document.getElementById('condSlug').value = slugify(nome);
-}
-
-function slugify(texto) {
-  return String(texto || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .substring(0, 40);
-}
-
-async function adicionarCondominio(event) {
-  event.preventDefault();
-  const nome = document.getElementById('condNome').value.trim();
-  const slug = document.getElementById('condSlug').value.trim();
-  const senhaUtilizador = document.getElementById('condSenha').value;
-  const migrarOrfaos = document.getElementById('condMigrarOrfaos').checked &&
-                       document.getElementById('formGrupoOrfaos').style.display !== 'none';
-
-  if (!nome || !slug || !senhaUtilizador) {
-    mostrarErro('Preencha nome, identificador e senha');
-    return;
-  }
-  if (!/^[a-z0-9-]+$/.test(slug)) {
-    mostrarErro('Identificador inválido (só a-z, 0-9 e -)');
-    return;
-  }
-
-  try {
-    const payloadObj = {
-      acao: 'criarCondominio',
-      senha: sessao.senha,
-      nome, slug, senhaUtilizador,
-      migrarOrfaos
-    };
-    let resultado;
-    if (USAR_MOCK_LOCAL) {
-      resultado = criarCondominioLocal(payloadObj);
-    } else {
-      const payload = new URLSearchParams();
-      payload.append('data', JSON.stringify(payloadObj));
-      const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: payload });
-      resultado = await response.json();
-    }
-
-    if (!resultado.sucesso) {
-      mostrarErro(resultado.erro || 'Erro ao criar');
-      return;
-    }
-    const msg = resultado.migrados ? `Cond criado! ${resultado.migrados} serviço(s) vinculado(s).` : 'Condomínio criado!';
-    mostrarSucesso(msg);
-    cancelarFormCond();
-    carregarCondominios();
-  } catch (erro) {
-    mostrarErro('Erro na comunicação: ' + erro.message);
-  }
-}
-
-async function confirmarExclusaoCond(slug, nome) {
-  if (!confirm(`Excluir "${nome}"?\n\nIsso apaga TODOS os serviços, fotos e o utilizador desse condomínio. Não dá pra desfazer.`)) return;
-
-  try {
-    const payloadObj = { acao: 'excluirCondominio', senha: sessao.senha, slug };
-    let resultado;
-    if (USAR_MOCK_LOCAL) {
-      resultado = excluirCondominioLocal(payloadObj);
-    } else {
-      const payload = new URLSearchParams();
-      payload.append('data', JSON.stringify(payloadObj));
-      const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: payload });
-      resultado = await response.json();
-    }
-    if (!resultado.sucesso) {
-      mostrarErro(resultado.erro || 'Erro ao excluir');
-      return;
-    }
-    mostrarSucesso('Condomínio excluído');
-    carregarCondominios();
-  } catch (erro) {
-    mostrarErro('Erro na comunicação: ' + erro.message);
-  }
-}
-
-function entrarComoAdmin(slug, nome) {
-  sessao.slug = slug;
-  sessao.nomeCond = nome;
-  entrarPainelCondominio(slug, nome);
-}
-
-function entrarPainelCondominio(slug, nome) {
-  document.getElementById('telaCondominios').style.display = 'none';
-  document.getElementById('telaAdmin').style.display = 'block';
-  document.getElementById('btnVoltarConds').style.display = sessao.escopo === 'admin' ? 'inline-block' : 'none';
-
-  const contexto = document.getElementById('condContexto');
-  contexto.style.display = 'block';
-  contexto.innerHTML = `Gerenciando: <strong>${escapeHtml(nome)}</strong> <span style="color: var(--muted); font-family: monospace; font-size: 12px;">(${escapeHtml(slug)})</span>`;
-
-  // Limpa qualquer estado de edição/preview de cond anterior
-  cancelarEdicao();
-  servicosCache = [];
-
-  carregarServicosAdmin();
-  mostrarQRCode();
-}
-
-function copiarTexto(texto, msgSucesso) {
-  navigator.clipboard.writeText(texto).then(() => {
-    mostrarSucesso(msgSucesso || 'Copiado!');
-  });
-}
-
-function escapeHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 // ============================================
@@ -383,8 +95,7 @@ async function enviarServico(event) {
     let resultado;
 
     const payloadObj = {
-      senha: sessao.senha,
-      condominioSlug: sessao.slug,
+      senha: ADMIN_PASSWORD,
       titulo,
       categoria,
       data,
@@ -495,7 +206,7 @@ async function excluirServico(id) {
 
   try {
     let resultado;
-    const payloadObj = { senha: sessao.senha, condominioSlug: sessao.slug, acao: 'excluir', id };
+    const payloadObj = { senha: ADMIN_PASSWORD, acao: 'excluir', id };
 
     if (USAR_MOCK_LOCAL) {
       resultado = excluirServicoLocal(payloadObj);
@@ -527,10 +238,11 @@ async function carregarServicosAdmin() {
     let data;
 
     if (USAR_MOCK_LOCAL) {
-      data = carregarServicosLocal(sessao.slug);
+      // MOCK LOCAL
+      data = carregarServicosLocal();
     } else {
-      const url = sessao.slug ? `${APPS_SCRIPT_URL}?c=${encodeURIComponent(sessao.slug)}` : APPS_SCRIPT_URL;
-      const response = await fetch(url);
+      // API Real
+      const response = await fetch(APPS_SCRIPT_URL);
       data = await response.json();
     }
 
@@ -580,14 +292,17 @@ function renderizarListaAdmin() {
 // ============================================
 
 function mostrarQRCode() {
-  let baseUrl;
+  let urlMoradores;
+
+  // Detectar se está em localhost ou GitHub Pages
   if (USAR_MOCK_LOCAL) {
-    baseUrl = `http://${window.location.hostname}:${window.location.port}/servicos-moradores.html`;
+    // Teste local
+    urlMoradores = `http://${window.location.hostname}:${window.location.port}/servicos-moradores.html`;
   } else {
-    baseUrl = 'https://brunoblc.github.io/Condominio-gv/servicos-moradores.html';
+    // GitHub Pages
+    urlMoradores = 'https://brunoblc.github.io/Condominio-gv/servicos-moradores.html';
   }
 
-  const urlMoradores = sessao.slug ? `${baseUrl}?c=${encodeURIComponent(sessao.slug)}` : baseUrl;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(urlMoradores)}&size=300x300`;
   const u = urlMoradores.replace(/'/g, "\\'");
 
@@ -726,8 +441,7 @@ function salvarServicoLocal(dados) {
     categoria: dados.categoria,
     status: 'Concluído',
     fotoAntes: dados.fotoAntes,
-    fotoDepois: dados.fotoDepois,
-    condominioSlug: dados.condominioSlug || ''
+    fotoDepois: dados.fotoDepois
   });
 
   localStorage.setItem('servicos-mock', JSON.stringify(servicos));
@@ -739,89 +453,13 @@ function salvarServicoLocal(dados) {
   };
 }
 
-function carregarServicosLocal(slug) {
-  const todos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
-  const conds = JSON.parse(localStorage.getItem('condominios-mock') || '[]');
-
-  // Fallback: nenhum slug + apenas 1 cond → usa esse
-  let slugFiltro = slug;
-  if (!slugFiltro && conds.length === 1) slugFiltro = conds[0].slug;
-
-  const filtrados = slugFiltro
-    ? todos.filter(s => s.condominioSlug === slugFiltro)
-    : todos;
-
+function carregarServicosLocal() {
+  const servicos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
   return {
     sucesso: true,
-    servicos: filtrados.slice().reverse(),
-    total: filtrados.length
+    servicos: servicos.reverse(),
+    total: servicos.length
   };
-}
-
-// ============================================
-// 🏢 MOCK — CONDOMÍNIOS E LOGIN
-// ============================================
-
-function loginLocal(senha, slug) {
-  if (senha === ADMIN_PASSWORD) {
-    if (slug) {
-      const cond = (JSON.parse(localStorage.getItem('condominios-mock') || '[]')).find(c => c.slug === slug);
-      return { sucesso: true, escopo: 'admin', slug, cond };
-    }
-    return { sucesso: true, escopo: 'admin' };
-  }
-  if (slug) {
-    const conds = JSON.parse(localStorage.getItem('condominios-mock') || '[]');
-    const cond = conds.find(c => c.slug === slug && c.senhaUtilizador === senha);
-    if (cond) return { sucesso: true, escopo: 'cond', slug, cond };
-  }
-  return { sucesso: false, erro: 'Senha incorreta' };
-}
-
-function listarCondominiosLocal() {
-  const conds = JSON.parse(localStorage.getItem('condominios-mock') || '[]');
-  const servicos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
-  const orfaos = servicos.filter(s => !s.condominioSlug).length;
-  return { sucesso: true, condominios: conds, orfaos };
-}
-
-function criarCondominioLocal(dados) {
-  const conds = JSON.parse(localStorage.getItem('condominios-mock') || '[]');
-  if (conds.some(c => c.slug === dados.slug)) {
-    return { sucesso: false, erro: 'Já existe condomínio com esse slug' };
-  }
-  const cond = {
-    id: 'COND-' + Date.now(),
-    slug: dados.slug,
-    nome: dados.nome,
-    senhaUtilizador: dados.senhaUtilizador,
-    folderID: 'mock-folder-' + dados.slug,
-    dataCriacao: new Date().toISOString()
-  };
-  conds.push(cond);
-  localStorage.setItem('condominios-mock', JSON.stringify(conds));
-
-  let migrados = 0;
-  if (dados.migrarOrfaos) {
-    const servicos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
-    servicos.forEach(s => {
-      if (!s.condominioSlug) { s.condominioSlug = dados.slug; migrados++; }
-    });
-    localStorage.setItem('servicos-mock', JSON.stringify(servicos));
-  }
-  return { sucesso: true, id: cond.id, slug: cond.slug, migrados };
-}
-
-function excluirCondominioLocal(dados) {
-  const conds = JSON.parse(localStorage.getItem('condominios-mock') || '[]');
-  const novos = conds.filter(c => c.slug !== dados.slug);
-  if (novos.length === conds.length) return { sucesso: false, erro: 'Condomínio não encontrado' };
-
-  const servicos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
-  const servicosRestantes = servicos.filter(s => s.condominioSlug !== dados.slug);
-  localStorage.setItem('servicos-mock', JSON.stringify(servicosRestantes));
-  localStorage.setItem('condominios-mock', JSON.stringify(novos));
-  return { sucesso: true, slug: dados.slug };
 }
 
 function editarServicoLocal(dados) {
@@ -862,12 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hoje = new Date().toISOString().split('T')[0];
   document.getElementById('data').value = hoje;
 
-  // Subtítulo do login muda se a URL aponta pra um cond específico
-  if (slugUrl) {
-    const sub = document.getElementById('loginSubtitulo');
-    if (sub) sub.textContent = `Acesso ao condomínio: ${slugUrl}`;
-  }
-
+  // Avisar se está em modo mock
   if (USAR_MOCK_LOCAL) {
     console.log('✅ Modo MOCK LOCAL ativado - Dados salvos em localStorage');
   }

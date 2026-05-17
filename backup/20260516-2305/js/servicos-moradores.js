@@ -11,9 +11,6 @@ const USAR_MOCK_LOCAL = window.location.hostname === 'localhost' || window.locat
 const CACHE_DURATION = 0; // sem cache — sempre buscar do servidor
 const AUTO_REFRESH_INTERVAL = 30000; // 30 segundos
 
-// Slug do condomínio vindo da URL (?c=xxx)
-const slugUrl = new URLSearchParams(window.location.search).get('c');
-
 let servicosGlobal = [];
 
 // ============================================
@@ -38,23 +35,16 @@ async function carregarServicos() {
     let data;
 
     if (USAR_MOCK_LOCAL) {
-      // MOCK LOCAL — filtra pelo slug ou cai pro único cond existente
-      const todos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
-      const conds = JSON.parse(localStorage.getItem('condominios-mock') || '[]');
-      let slugFiltro = slugUrl;
-      if (!slugFiltro && conds.length === 1) slugFiltro = conds[0].slug;
-      const filtrados = slugFiltro
-        ? todos.filter(s => s.condominioSlug === slugFiltro)
-        : todos;
+      // MOCK LOCAL - ler do localStorage
+      const servicos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
       data = {
         sucesso: true,
-        servicos: filtrados.slice().reverse(),
-        total: filtrados.length
+        servicos: servicos.reverse(),
+        total: servicos.length
       };
     } else {
-      // API Real — GET com filtro de cond
-      const url = slugUrl ? `${APPS_SCRIPT_URL}?c=${encodeURIComponent(slugUrl)}` : APPS_SCRIPT_URL;
-      const response = await fetch(url);
+      // API Real — GET simples, sem headers custom (evita preflight)
+      const response = await fetch(APPS_SCRIPT_URL);
       data = await response.json();
     }
 

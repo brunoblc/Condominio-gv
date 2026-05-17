@@ -153,110 +153,6 @@ html, body {
   color: var(--gold2);
 }
 
-/* TELA CONDOMÍNIOS */
-#telaCondominios {
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.conds-toolbar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.banner-aviso {
-  background: rgba(245,168,0,0.1);
-  border: 1px solid var(--gold);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  color: var(--gold);
-  font-size: 13px;
-  margin-bottom: 16px;
-}
-
-.cond-card {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-  margin-bottom: 14px;
-  transition: all 0.15s;
-}
-.cond-card:hover { border-color: var(--gold); }
-
-.cond-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.cond-card h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text);
-}
-
-.cond-card .cond-slug {
-  display: inline-block;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-family: monospace;
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 3px;
-  margin-top: 4px;
-}
-
-.cond-urls {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin: 12px 0;
-  font-size: 12px;
-}
-.cond-urls div { margin: 4px 0; word-break: break-all; }
-.cond-urls strong { color: var(--gold); margin-right: 6px; }
-
-.cond-acoes {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.cond-acoes button {
-  flex: 1;
-  min-width: 120px;
-  padding: 10px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.cond-acoes button:hover { border-color: var(--gold); color: var(--gold); }
-.cond-acoes button.btn-excluir-cond:hover { border-color: #e74c3c; color: #e74c3c; }
-
-.cond-contexto {
-  background: rgba(245,168,0,0.08);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--gold);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-.cond-contexto strong { color: var(--gold); }
-
 /* TELA ADMIN */
 #telaAdmin {
   display: none;
@@ -651,7 +547,7 @@ html, body {
   <div class="login-box">
     <div class="login-title">
       <h1><span>GV</span> Serviços</h1>
-      <p id="loginSubtitulo">Painel Administrativo</p>
+      <p>Painel Administrativo</p>
     </div>
     <form onsubmit="fazerLogin(event)">
       <div class="form-group">
@@ -663,56 +559,6 @@ html, body {
   </div>
 </div>
 
-<!-- TELA CONDOMÍNIOS (somente admin sem slug) -->
-<div id="telaCondominios" style="display:none;">
-  <div class="admin-container">
-    <div class="admin-header">
-      <div class="admin-title">
-        <span>🏢</span>
-        <h1>Painel <span>Geral</span></h1>
-      </div>
-      <button class="btn-logout" onclick="logout()">Sair →</button>
-    </div>
-
-    <div class="conds-toolbar">
-      <button class="btn-primario" onclick="abrirFormAdicionarCond()">➕ Adicionar Condomínio</button>
-    </div>
-
-    <div id="bannerOrfaos" class="banner-aviso" style="display:none;"></div>
-
-    <div id="formAdicionarCondWrap" class="painel" style="display:none; margin-top: 20px;">
-      <div class="painel-title">Novo Condomínio</div>
-      <form onsubmit="adicionarCondominio(event)">
-        <div class="form-group">
-          <label for="condNome">Nome do Condomínio</label>
-          <input type="text" id="condNome" placeholder="Ex: Edifício das Flores" required oninput="atualizarSlugAuto()">
-        </div>
-        <div class="form-group">
-          <label for="condSlug">Identificador (URL)</label>
-          <input type="text" id="condSlug" placeholder="ed-flores" required pattern="[a-z0-9-]+">
-          <small style="color: var(--muted); font-size: 11px;">Só letras minúsculas, números e hífen.</small>
-        </div>
-        <div class="form-group">
-          <label for="condSenha">Senha do Utilizador (zelador)</label>
-          <input type="text" id="condSenha" placeholder="senha que o zelador usará" required>
-        </div>
-        <div class="form-group" id="formGrupoOrfaos" style="display:none;">
-          <label style="display: flex; align-items: center; gap: 8px;">
-            <input type="checkbox" id="condMigrarOrfaos" checked>
-            Vincular <span id="qtdOrfaos">0</span> serviço(s) antigo(s) a este condomínio
-          </label>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn-primario">Criar Condomínio</button>
-          <button type="button" class="btn-secundario" onclick="cancelarFormCond()">Cancelar</button>
-        </div>
-      </form>
-    </div>
-
-    <div id="listaCondominios" style="margin-top: 24px;"></div>
-  </div>
-</div>
-
 <!-- TELA ADMIN -->
 <div id="telaAdmin">
   <div class="admin-container">
@@ -720,15 +566,10 @@ html, body {
     <div class="admin-header">
       <div class="admin-title">
         <span>🔧</span>
-        <h1 id="tituloAdmin">Gerenciamento de <span>Serviços</span></h1>
+        <h1>Gerenciamento de <span>Serviços</span></h1>
       </div>
-      <div style="display: flex; gap: 10px;">
-        <button id="btnVoltarConds" class="btn-secundario" onclick="voltarParaCondominios()" style="display:none;">← Condomínios</button>
-        <button class="btn-logout" onclick="logout()">Sair →</button>
-      </div>
+      <button class="btn-logout" onclick="logout()">Sair →</button>
     </div>
-
-    <div id="condContexto" class="cond-contexto" style="display:none;"></div>
 
     <div class="admin-grid">
 
