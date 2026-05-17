@@ -22,8 +22,9 @@ let servicosCache = [];
 let condominiosCache = [];
 let servicoEmEdicao = null; // id do serviço sendo editado (null = modo criação)
 
-// Slug solicitado pela URL (?c=xxx)
-const slugUrl = new URLSearchParams(window.location.search).get('c');
+// Slug solicitado pela URL (?cond=xxx — 'c' é reservado pelo Apps Script)
+const slugUrl = new URLSearchParams(window.location.search).get('cond')
+             || new URLSearchParams(window.location.search).get('c'); // compat com links antigos
 
 // ============================================
 // 🔐 AUTENTICAÇÃO
@@ -130,17 +131,6 @@ async function carregarCondominios() {
 
 function renderizarCondominios(orfaos) {
   const container = document.getElementById('listaCondominios');
-  const banner = document.getElementById('bannerOrfaos');
-
-  // Banner de órfãos: só aparece se tiver órfãos E ainda não houver cond
-  if (orfaos > 0 && condominiosCache.length === 0) {
-    banner.style.display = 'block';
-    banner.innerHTML = `⚠️ Você tem <strong>${orfaos}</strong> serviço(s) existente(s) sem condomínio. Crie o primeiro condomínio abaixo e marque a opção pra vincular.`;
-    // Já abre o form automaticamente
-    abrirFormAdicionarCond(orfaos);
-  } else {
-    banner.style.display = 'none';
-  }
 
   if (condominiosCache.length === 0) {
     container.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 40px;">Nenhum condomínio cadastrado. Clique em "Adicionar Condomínio" pra começar.</p>';
@@ -150,8 +140,8 @@ function renderizarCondominios(orfaos) {
   container.innerHTML = '';
   const origem = window.location.origin + window.location.pathname.replace(/[^/]+$/, '');
   condominiosCache.forEach(cond => {
-    const urlUtilizador = `${origem}servicos-admin.html?c=${cond.slug}`;
-    const urlMoradores = `${origem}servicos-moradores.html?c=${cond.slug}`;
+    const urlUtilizador = `${origem}servicos-admin.html?cond=${cond.slug}`;
+    const urlMoradores = `${origem}servicos-moradores.html?cond=${cond.slug}`;
     const slugEsc = String(cond.slug).replace(/'/g, "\\'");
     const nomeEsc = String(cond.nome).replace(/'/g, "\\'");
 
@@ -180,23 +170,11 @@ function renderizarCondominios(orfaos) {
   });
 }
 
-function abrirFormAdicionarCond(qtdOrfaos) {
+function abrirFormAdicionarCond() {
   document.getElementById('formAdicionarCondWrap').style.display = 'block';
   document.getElementById('condNome').value = '';
   document.getElementById('condSlug').value = '';
   document.getElementById('condSenha').value = '';
-
-  if (qtdOrfaos && qtdOrfaos > 0) {
-    document.getElementById('formGrupoOrfaos').style.display = 'block';
-    document.getElementById('qtdOrfaos').textContent = qtdOrfaos;
-    document.getElementById('condMigrarOrfaos').checked = true;
-    // sugerir nome + slug "GV Principal"
-    document.getElementById('condNome').value = 'GV Principal';
-    document.getElementById('condSlug').value = 'gv-principal';
-  } else {
-    document.getElementById('formGrupoOrfaos').style.display = 'none';
-  }
-
   document.getElementById('condNome').focus();
 }
 
@@ -223,8 +201,6 @@ async function adicionarCondominio(event) {
   const nome = document.getElementById('condNome').value.trim();
   const slug = document.getElementById('condSlug').value.trim();
   const senhaUtilizador = document.getElementById('condSenha').value;
-  const migrarOrfaos = document.getElementById('condMigrarOrfaos').checked &&
-                       document.getElementById('formGrupoOrfaos').style.display !== 'none';
 
   if (!nome || !slug || !senhaUtilizador) {
     mostrarErro('Preencha nome, identificador e senha');
@@ -239,8 +215,7 @@ async function adicionarCondominio(event) {
     const payloadObj = {
       acao: 'criarCondominio',
       senha: sessao.senha,
-      nome, slug, senhaUtilizador,
-      migrarOrfaos
+      nome, slug, senhaUtilizador
     };
     let resultado;
     if (USAR_MOCK_LOCAL) {
@@ -256,8 +231,7 @@ async function adicionarCondominio(event) {
       mostrarErro(resultado.erro || 'Erro ao criar');
       return;
     }
-    const msg = resultado.migrados ? `Cond criado! ${resultado.migrados} serviço(s) vinculado(s).` : 'Condomínio criado!';
-    mostrarSucesso(msg);
+    mostrarSucesso('Condomínio criado!');
     cancelarFormCond();
     carregarCondominios();
   } catch (erro) {
@@ -529,7 +503,7 @@ async function carregarServicosAdmin() {
     if (USAR_MOCK_LOCAL) {
       data = carregarServicosLocal(sessao.slug);
     } else {
-      const url = sessao.slug ? `${APPS_SCRIPT_URL}?c=${encodeURIComponent(sessao.slug)}` : APPS_SCRIPT_URL;
+      const url = sessao.slug ? `${APPS_SCRIPT_URL}?cond=${encodeURIComponent(sessao.slug)}` : APPS_SCRIPT_URL;
       const response = await fetch(url);
       data = await response.json();
     }
@@ -587,7 +561,7 @@ function mostrarQRCode() {
     baseUrl = 'https://brunoblc.github.io/Condominio-gv/servicos-moradores.html';
   }
 
-  const urlMoradores = sessao.slug ? `${baseUrl}?c=${encodeURIComponent(sessao.slug)}` : baseUrl;
+  const urlMoradores = sessao.slug ? `${baseUrl}?cond=${encodeURIComponent(sessao.slug)}` : baseUrl;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(urlMoradores)}&size=300x300`;
   const u = urlMoradores.replace(/'/g, "\\'");
 

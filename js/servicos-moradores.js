@@ -11,8 +11,9 @@ const USAR_MOCK_LOCAL = window.location.hostname === 'localhost' || window.locat
 const CACHE_DURATION = 0; // sem cache — sempre buscar do servidor
 const AUTO_REFRESH_INTERVAL = 30000; // 30 segundos
 
-// Slug do condomínio vindo da URL (?c=xxx)
-const slugUrl = new URLSearchParams(window.location.search).get('c');
+// Slug do condomínio vindo da URL (?cond=xxx — 'c' é reservado pelo Apps Script)
+const slugUrl = new URLSearchParams(window.location.search).get('cond')
+             || new URLSearchParams(window.location.search).get('c'); // compat com links antigos
 
 let servicosGlobal = [];
 
@@ -53,7 +54,7 @@ async function carregarServicos() {
       };
     } else {
       // API Real — GET com filtro de cond
-      const url = slugUrl ? `${APPS_SCRIPT_URL}?c=${encodeURIComponent(slugUrl)}` : APPS_SCRIPT_URL;
+      const url = slugUrl ? `${APPS_SCRIPT_URL}?cond=${encodeURIComponent(slugUrl)}` : APPS_SCRIPT_URL;
       const response = await fetch(url);
       data = await response.json();
     }

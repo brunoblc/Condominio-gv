@@ -678,8 +678,6 @@ html, body {
       <button class="btn-primario" onclick="abrirFormAdicionarCond()">➕ Adicionar Condomínio</button>
     </div>
 
-    <div id="bannerOrfaos" class="banner-aviso" style="display:none;"></div>
-
     <div id="formAdicionarCondWrap" class="painel" style="display:none; margin-top: 20px;">
       <div class="painel-title">Novo Condomínio</div>
       <form onsubmit="adicionarCondominio(event)">
@@ -695,12 +693,6 @@ html, body {
         <div class="form-group">
           <label for="condSenha">Senha do Utilizador (zelador)</label>
           <input type="text" id="condSenha" placeholder="senha que o zelador usará" required>
-        </div>
-        <div class="form-group" id="formGrupoOrfaos" style="display:none;">
-          <label style="display: flex; align-items: center; gap: 8px;">
-            <input type="checkbox" id="condMigrarOrfaos" checked>
-            Vincular <span id="qtdOrfaos">0</span> serviço(s) antigo(s) a este condomínio
-          </label>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-primario">Criar Condomínio</button>
