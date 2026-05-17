@@ -52,7 +52,7 @@ html, body {
   padding: 0 20px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .logo-badge {
@@ -64,7 +64,18 @@ html, body {
   background: var(--bg);
   border: 2px solid var(--gold);
   border-radius: 4px;
-  flex-shrink: 0;
+  flex: 0 0 50px;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.logo-badge img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .logo-badge span {
@@ -73,6 +84,36 @@ html, body {
   font-size: 20px;
   color: var(--gold);
   letter-spacing: -1px;
+}
+
+/* Logo do CONDOMÍNIO — fica à direita, contida (não estoura mesmo se 4K) */
+.cond-logo-badge {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  margin-left: auto; /* empurra pra direita, longe do GV */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.cond-logo-badge img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.header .header-info {
+  min-width: 0; /* permite truncar sem empurrar os logos */
+  flex: 1 1 auto;
 }
 
 .header-info h1 {
@@ -509,10 +550,11 @@ html, body {
   }
 
   .header { padding: 12px 0; }
-  .header-content { gap: 12px; padding: 0 16px; }
+  .header-content { gap: 10px; padding: 0 14px; }
 
-  .logo-badge { width: 40px; height: 40px; }
+  .logo-badge { width: 38px; height: 38px; flex-basis: 38px; padding: 3px; }
   .logo-badge span { font-size: 16px; }
+  .cond-logo-badge { width: 38px; height: 38px; flex-basis: 38px; padding: 3px; }
 
   .header-info h1 { font-size: 18px; line-height: 1.15; }
   .header-info p {
@@ -564,12 +606,15 @@ html, body {
 <!-- HEADER -->
 <header class="header">
   <div class="header-content">
-    <div class="logo-badge">
-      <span>GV</span>
+    <div class="logo-badge" title="GV Gestão Predial">
+      <img src="logo-gv.png" alt="GV Gestão Predial">
     </div>
     <div class="header-info">
-      <h1>GV Serviços</h1>
+      <h1 id="headerTitulo">GV Serviços</h1>
       <p>Acompanhamento de Trabalhos Realizados</p>
+    </div>
+    <div id="condLogoBadge" class="cond-logo-badge" style="display:none;">
+      <img id="condLogoImg" src="" alt="">
     </div>
   </div>
 </header>

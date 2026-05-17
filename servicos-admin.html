@@ -31,6 +31,58 @@ html, body {
   min-height: 100vh;
 }
 
+/* LOGO GV — usado em vários lugares onde aparece "GV" */
+.gv-logo {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: 3px;
+}
+.gv-logo-sm { width: 28px; height: 28px; flex-basis: 28px; }
+.gv-logo-lg { width: 56px; height: 56px; flex-basis: 56px; }
+
+/* Mini logo do condomínio (cards da lista) */
+.cond-logo-thumb {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 2px;
+}
+
+/* Preview do upload de logo no formulário */
+.logo-preview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-preview img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 4px;
+}
+.logo-preview .logo-remover {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.logo-preview .logo-remover:hover { color: var(--red); }
+
 /* TELA DE SENHA */
 #telaSenha {
   display: flex;
@@ -650,6 +702,7 @@ html, body {
 <div id="telaSenha">
   <div class="login-box">
     <div class="login-title">
+      <img src="logo-gv.png" alt="GV Gestão Predial" class="gv-logo gv-logo-lg" style="display:block; margin: 0 auto 12px;">
       <h1><span>GV</span> Serviços</h1>
       <p id="loginSubtitulo">Painel Administrativo</p>
     </div>
@@ -693,6 +746,13 @@ html, body {
         <div class="form-group">
           <label for="condSenha">Senha do Utilizador (zelador)</label>
           <input type="text" id="condSenha" placeholder="senha que o zelador usará" required>
+        </div>
+        <div class="form-group">
+          <label for="condLogo">Logo do Condomínio (opcional)</label>
+          <input type="file" id="condLogo" accept="image/*" onchange="handleLogoCondChange(event)">
+          <small style="color: var(--muted); font-size: 11px;">Será exibida na página dos moradores. PNG ou JPG.</small>
+          <div id="previewLogoCond" class="logo-preview" style="display:none;"></div>
+          <input type="hidden" id="logoCondBase64">
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-primario">Criar Condomínio</button>

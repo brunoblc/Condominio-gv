@@ -144,14 +144,20 @@ function renderizarCondominios(orfaos) {
     const urlMoradores = `${origem}servicos-moradores.html?cond=${cond.slug}`;
     const slugEsc = String(cond.slug).replace(/'/g, "\\'");
     const nomeEsc = String(cond.nome).replace(/'/g, "\\'");
+    const logoHtml = cond.logoUrl
+      ? `<img src="${escapeHtml(cond.logoUrl)}" alt="Logo ${escapeHtml(cond.nome)}" class="cond-logo-thumb">`
+      : '';
 
     const card = document.createElement('div');
     card.className = 'cond-card';
     card.innerHTML = `
       <div class="cond-card-header">
-        <div>
-          <h3>${escapeHtml(cond.nome)}</h3>
-          <div class="cond-slug">${escapeHtml(cond.slug)}</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          ${logoHtml}
+          <div>
+            <h3>${escapeHtml(cond.nome)}</h3>
+            <div class="cond-slug">${escapeHtml(cond.slug)}</div>
+          </div>
         </div>
       </div>
       <div class="cond-urls">
@@ -175,11 +181,39 @@ function abrirFormAdicionarCond() {
   document.getElementById('condNome').value = '';
   document.getElementById('condSlug').value = '';
   document.getElementById('condSenha').value = '';
+  limparLogoCond();
   document.getElementById('condNome').focus();
 }
 
 function cancelarFormCond() {
   document.getElementById('formAdicionarCondWrap').style.display = 'none';
+  limparLogoCond();
+}
+
+function handleLogoCondChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    document.getElementById('logoCondBase64').value = base64;
+    const preview = document.getElementById('previewLogoCond');
+    preview.style.display = 'flex';
+    preview.innerHTML = `
+      <img src="${base64}" alt="Pré-visualização">
+      <button type="button" class="logo-remover" onclick="limparLogoCond()">Remover</button>
+    `;
+  };
+  reader.readAsDataURL(file);
+}
+
+function limparLogoCond() {
+  const input = document.getElementById('condLogo');
+  if (input) input.value = '';
+  const hidden = document.getElementById('logoCondBase64');
+  if (hidden) hidden.value = '';
+  const preview = document.getElementById('previewLogoCond');
+  if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
 }
 
 function atualizarSlugAuto() {
@@ -211,11 +245,14 @@ async function adicionarCondominio(event) {
     return;
   }
 
+  const logoBase64 = document.getElementById('logoCondBase64').value || '';
+
   try {
     const payloadObj = {
       acao: 'criarCondominio',
       senha: sessao.senha,
-      nome, slug, senhaUtilizador
+      nome, slug, senhaUtilizador,
+      logoBase64
     };
     let resultado;
     if (USAR_MOCK_LOCAL) {
@@ -637,6 +674,7 @@ function imprimirQRCode(url) {
     mostrarErro('Bloqueador de popup impediu a impressão');
     return;
   }
+  const logoUrlAbs = new URL('logo-gv.png', window.location.href).href;
   janela.document.write(`
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -645,9 +683,10 @@ function imprimirQRCode(url) {
         <title>QRCode Serviços GV</title>
         <style>
           body { font-family: Arial, sans-serif; text-align: center; padding: 40px 20px; color: #111; }
+          .gv-logo-print { width: 56px; height: 56px; object-fit: contain; display: block; margin: 0 auto 12px; }
           h1 { font-size: 24px; margin: 0 0 4px; }
           .subtitulo { font-size: 14px; color: #555; margin: 0 0 28px; }
-          img { width: 420px; height: 420px; max-width: 90vw; max-height: 60vh; }
+          .qr-img { width: 420px; height: 420px; max-width: 90vw; max-height: 60vh; }
           .url { font-size: 11px; color: #333; word-break: break-all; margin-top: 18px; }
           @media print {
             body { padding: 20px; }
@@ -655,9 +694,10 @@ function imprimirQRCode(url) {
         </style>
       </head>
       <body>
+        <img src="${logoUrlAbs}" alt="GV Gestão Predial" class="gv-logo-print">
         <h1>Acompanhe os Serviços</h1>
         <p class="subtitulo">GV Gestão Predial · Aponte a câmera do celular</p>
-        <img src="${urlQRGrande(url)}" alt="QRCode">
+        <img src="${urlQRGrande(url)}" alt="QRCode" class="qr-img">
         <p class="url">${url}</p>
         <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };<\/script>
       </body>
@@ -770,7 +810,8 @@ function criarCondominioLocal(dados) {
     nome: dados.nome,
     senhaUtilizador: dados.senhaUtilizador,
     folderID: 'mock-folder-' + dados.slug,
-    dataCriacao: new Date().toISOString()
+    dataCriacao: new Date().toISOString(),
+    logoUrl: (dados.logoBase64 && String(dados.logoBase64).startsWith('data:')) ? dados.logoBase64 : ''
   };
   conds.push(cond);
   localStorage.setItem('condominios-mock', JSON.stringify(conds));

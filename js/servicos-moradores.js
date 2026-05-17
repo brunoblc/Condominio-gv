@@ -47,10 +47,12 @@ async function carregarServicos() {
       const filtrados = slugFiltro
         ? todos.filter(s => s.condominioSlug === slugFiltro)
         : todos;
+      const condInfo = slugFiltro ? conds.find(c => c.slug === slugFiltro) : null;
       data = {
         sucesso: true,
         servicos: filtrados.slice().reverse(),
-        total: filtrados.length
+        total: filtrados.length,
+        cond: condInfo ? { slug: condInfo.slug, nome: condInfo.nome, logoUrl: condInfo.logoUrl || '' } : null
       };
     } else {
       // API Real — GET com filtro de cond
@@ -64,6 +66,7 @@ async function carregarServicos() {
       // Salvar no cache
       localStorage.setItem('servicos-cache', JSON.stringify(servicosGlobal));
       localStorage.setItem('servicos-cache-time', agora.toString());
+      aplicarInfoCondominio(data.cond);
       renderizarServicos();
       mostrarAtualizacao();
     } else {
@@ -79,6 +82,26 @@ async function carregarServicos() {
     } else {
       mostrarErro('Não foi possível carregar os serviços');
     }
+  }
+}
+
+// ============================================
+// 🏢 INFO DO CONDOMÍNIO (logo + nome no header)
+// ============================================
+
+function aplicarInfoCondominio(cond) {
+  const badge = document.getElementById('condLogoBadge');
+  const img = document.getElementById('condLogoImg');
+  if (!badge || !img) return;
+
+  if (cond && cond.logoUrl) {
+    img.src = cond.logoUrl;
+    img.alt = cond.nome ? `Logo ${cond.nome}` : 'Logo do condomínio';
+    badge.title = cond.nome || '';
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+    img.src = '';
   }
 }
 
