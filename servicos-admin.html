@@ -286,6 +286,32 @@ html, body {
   cursor: pointer;
 }
 
+.foto-upload-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.foto-btn {
+  flex: 1;
+  padding: 14px 12px;
+  background: var(--bg3);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.foto-btn:hover,
+.foto-btn:active {
+  border-color: var(--gold);
+  background: var(--bg4);
+  color: var(--gold);
+}
+
 .foto-preview {
   margin-top: 12px;
   border-radius: var(--radius);
@@ -345,6 +371,48 @@ html, body {
   font-size: 13px;
   color: var(--muted);
   margin-bottom: 4px;
+}
+
+.card-acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-acao {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-acao:hover { border-color: var(--gold); color: var(--gold); }
+.btn-acao.btn-excluir:hover { border-color: var(--red, #e74c3c); color: var(--red, #e74c3c); }
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-actions .btn-primario { flex: 1; }
+
+#bannerEdicao {
+  background: rgba(245,168,0,0.12);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--gold);
 }
 
 .descricao {
@@ -481,7 +549,8 @@ html, body {
 
       <!-- FORMULÁRIO -->
       <div class="painel">
-        <div class="painel-title">📋 Novo Serviço</div>
+        <div class="painel-title" id="formTitulo">📋 Novo Serviço</div>
+        <div id="bannerEdicao" style="display:none;"></div>
         <form id="formularioServico" onsubmit="enviarServico(event)">
 
           <div class="form-group">
@@ -507,40 +576,46 @@ html, body {
           </div>
 
           <div class="form-group">
-            <label for="valor">Valor (opcional)</label>
-            <input type="text" id="valor" placeholder="Ex: R$ 1.200,00">
-          </div>
-
-          <div class="form-group">
             <label for="descricao">Descrição (opcional)</label>
             <textarea id="descricao" placeholder="Detalhes adicionais..." style="resize: vertical; min-height: 80px;"></textarea>
           </div>
 
           <div class="form-group">
             <label>Foto Antes *</label>
-            <div class="foto-upload" onclick="document.getElementById('inputFotoAntes').click();">
-              <input type="file" id="inputFotoAntes" accept="image/*" onchange="handleFotoChange(event, 'Antes')" required>
-              <label for="inputFotoAntes" class="foto-upload-label">
-                📸 Clique para selecionar foto ANTES
-              </label>
+            <div class="foto-upload-actions">
+              <button type="button" class="foto-btn" onclick="document.getElementById('inputFotoAntesCamera').click();">
+                📷 Tirar Foto
+              </button>
+              <button type="button" class="foto-btn" onclick="document.getElementById('inputFotoAntesGaleria').click();">
+                🖼️ Galeria
+              </button>
             </div>
+            <input type="file" id="inputFotoAntesCamera" accept="image/*" capture="environment" onchange="handleFotoChange(event, 'Antes')" style="display:none">
+            <input type="file" id="inputFotoAntesGaleria" accept="image/*" onchange="handleFotoChange(event, 'Antes')" style="display:none">
             <div id="previewAntes" class="foto-preview"></div>
             <input type="hidden" id="fotoDataAntes">
           </div>
 
           <div class="form-group">
             <label>Foto Depois *</label>
-            <div class="foto-upload" onclick="document.getElementById('inputFotoDepois').click();">
-              <input type="file" id="inputFotoDepois" accept="image/*" onchange="handleFotoChange(event, 'Depois')" required>
-              <label for="inputFotoDepois" class="foto-upload-label">
-                📸 Clique para selecionar foto DEPOIS
-              </label>
+            <div class="foto-upload-actions">
+              <button type="button" class="foto-btn" onclick="document.getElementById('inputFotoDepoisCamera').click();">
+                📷 Tirar Foto
+              </button>
+              <button type="button" class="foto-btn" onclick="document.getElementById('inputFotoDepoisGaleria').click();">
+                🖼️ Galeria
+              </button>
             </div>
+            <input type="file" id="inputFotoDepoisCamera" accept="image/*" capture="environment" onchange="handleFotoChange(event, 'Depois')" style="display:none">
+            <input type="file" id="inputFotoDepoisGaleria" accept="image/*" onchange="handleFotoChange(event, 'Depois')" style="display:none">
             <div id="previewDepois" class="foto-preview"></div>
             <input type="hidden" id="fotoDataDepois">
           </div>
 
-          <button type="submit" class="btn-primario">Cadastrar Serviço →</button>
+          <div class="form-actions">
+            <button type="submit" id="btnEnviar" class="btn-primario">Cadastrar Serviço →</button>
+            <button type="button" id="btnCancelarEdicao" class="btn-secundario" onclick="cancelarEdicao()" style="display:none;">Cancelar</button>
+          </div>
         </form>
       </div>
 

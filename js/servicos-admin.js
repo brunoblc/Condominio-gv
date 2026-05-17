@@ -12,6 +12,7 @@ const ADMIN_PASSWORD = 'admin2024'; // Mesma senha do Apps Script
 
 let autenticado = false;
 let servicosCache = [];
+let servicoEmEdicao = null; // id do serviço sendo editado (null = modo criação)
 
 // ============================================
 // 🔐 AUTENTICAÇÃO
@@ -70,70 +71,162 @@ async function enviarServico(event) {
   const titulo = document.getElementById('titulo').value;
   const categoria = document.getElementById('categoria').value;
   const data = document.getElementById('data').value;
-  const valor = document.getElementById('valor').value;
   const descricao = document.getElementById('descricao').value;
   const fotoAntes = document.getElementById('fotoDataAntes').value;
   const fotoDepois = document.getElementById('fotoDataDepois').value;
 
-  if (!titulo || !fotoAntes || !fotoDepois) {
-    mostrarErro('Preencha pelo menos: título e ambas as fotos');
+  const editando = !!servicoEmEdicao;
+
+  if (!titulo) {
+    mostrarErro('Preencha o título');
+    return;
+  }
+  if (!editando && (!fotoAntes || !fotoDepois)) {
+    mostrarErro('Selecione as fotos Antes e Depois');
     return;
   }
 
-  const btn = document.querySelector('#formularioServico button[type="submit"]');
+  const btn = document.getElementById('btnEnviar');
+  const textoOriginal = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'Enviando...';
+  btn.textContent = editando ? 'Atualizando...' : 'Enviando...';
 
   try {
     let resultado;
 
+    const payloadObj = {
+      senha: ADMIN_PASSWORD,
+      titulo,
+      categoria,
+      data,
+      descricao,
+      fotoAntes,
+      fotoDepois
+    };
+    if (editando) {
+      payloadObj.acao = 'editar';
+      payloadObj.id = servicoEmEdicao;
+    }
+
     if (USAR_MOCK_LOCAL) {
-      // MOCK LOCAL para testes
-      resultado = salvarServicoLocal({
-        senha: ADMIN_PASSWORD,
-        titulo,
-        categoria,
-        data,
-        valor,
-        descricao,
-        fotoAntes,
-        fotoDepois
-      });
+      resultado = editando ? editarServicoLocal(payloadObj) : salvarServicoLocal(payloadObj);
     } else {
-      // API Real — form-encoded sobrevive ao redirect do Apps Script
       const payload = new URLSearchParams();
-      payload.append('data', JSON.stringify({
-        senha: ADMIN_PASSWORD,
-        titulo,
-        categoria,
-        data,
-        valor,
-        descricao,
-        fotoAntes,
-        fotoDepois
-      }));
-      const response = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        body: payload
-      });
+      payload.append('data', JSON.stringify(payloadObj));
+      const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: payload });
       resultado = await response.json();
     }
 
     if (resultado.sucesso) {
-      mostrarSucesso('Serviço cadastrado com sucesso! ID: ' + resultado.id);
-      document.getElementById('formularioServico').reset();
-      document.getElementById('previewAntes').innerHTML = '';
-      document.getElementById('previewDepois').innerHTML = '';
+      mostrarSucesso(editando ? 'Serviço atualizado!' : 'Serviço cadastrado! ID: ' + resultado.id);
+      cancelarEdicao();
       carregarServicosAdmin();
     } else {
-      mostrarErro(resultado.erro || 'Erro ao cadastrar serviço');
+      mostrarErro(resultado.erro || 'Erro ao salvar serviço');
     }
   } catch (erro) {
     mostrarErro('Erro na comunicação: ' + erro.message);
   }
 
   btn.disabled = false;
-  btn.textContent = 'Cadastrar Serviço →';
+  btn.textContent = textoOriginal;
+}
+
+// ============================================
+// ✏️ EDITAR SERVIÇO
+// ============================================
+
+function iniciarEdicao(id) {
+  const servico = servicosCache.find(s => s.id === id);
+  if (!servico) {
+    mostrarErro('Serviço não encontrado');
+    return;
+  }
+
+  servicoEmEdicao = id;
+
+  document.getElementById('titulo').value = servico.titulo || '';
+  document.getElementById('categoria').value = servico.categoria || '';
+  document.getElementById('descricao').value = servico.descricao || '';
+
+  // converter data dd/MM/yyyy → yyyy-MM-dd pro <input type="date">
+  const dataInput = document.getElementById('data');
+  const m = String(servico.data || '').match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m) {
+    dataInput.value = `${m[3]}-${m[2]}-${m[1]}`;
+  } else {
+    dataInput.value = '';
+  }
+
+  // mostrar fotos atuais no preview, manter hidden vazio (= não alterar)
+  const previewAntes = document.getElementById('previewAntes');
+  const previewDepois = document.getElementById('previewDepois');
+  previewAntes.innerHTML = servico.fotoAntes ? `<img src="${servico.fotoAntes}" alt="Foto antes atual">` : '';
+  previewDepois.innerHTML = servico.fotoDepois ? `<img src="${servico.fotoDepois}" alt="Foto depois atual">` : '';
+  document.getElementById('fotoDataAntes').value = '';
+  document.getElementById('fotoDataDepois').value = '';
+
+  document.getElementById('formTitulo').textContent = '✏️ Editando Serviço';
+  const banner = document.getElementById('bannerEdicao');
+  banner.style.display = 'block';
+  banner.textContent = `Editando: ${servico.titulo}. Selecione novas fotos só se quiser substituir as atuais.`;
+  document.getElementById('btnEnviar').textContent = 'Atualizar Serviço';
+  document.getElementById('btnCancelarEdicao').style.display = 'inline-block';
+
+  document.getElementById('formularioServico').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelarEdicao() {
+  servicoEmEdicao = null;
+  document.getElementById('formularioServico').reset();
+  document.getElementById('previewAntes').innerHTML = '';
+  document.getElementById('previewDepois').innerHTML = '';
+  document.getElementById('fotoDataAntes').value = '';
+  document.getElementById('fotoDataDepois').value = '';
+
+  // restaurar data pra hoje (igual ao boot)
+  document.getElementById('data').value = new Date().toISOString().split('T')[0];
+
+  document.getElementById('formTitulo').textContent = '📋 Novo Serviço';
+  document.getElementById('bannerEdicao').style.display = 'none';
+  document.getElementById('btnEnviar').textContent = 'Cadastrar Serviço →';
+  document.getElementById('btnCancelarEdicao').style.display = 'none';
+}
+
+// ============================================
+// 🗑️ EXCLUIR SERVIÇO
+// ============================================
+
+async function excluirServico(id) {
+  const servico = servicosCache.find(s => s.id === id);
+  const nome = servico ? servico.titulo : id;
+  if (!confirm(`Excluir "${nome}"?\n\nIsso remove o serviço e as fotos do Drive. Não dá pra desfazer.`)) {
+    return;
+  }
+
+  try {
+    let resultado;
+    const payloadObj = { senha: ADMIN_PASSWORD, acao: 'excluir', id };
+
+    if (USAR_MOCK_LOCAL) {
+      resultado = excluirServicoLocal(payloadObj);
+    } else {
+      const payload = new URLSearchParams();
+      payload.append('data', JSON.stringify(payloadObj));
+      const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: payload });
+      resultado = await response.json();
+    }
+
+    if (resultado.sucesso) {
+      mostrarSucesso('Serviço excluído');
+      if (servicoEmEdicao === id) cancelarEdicao();
+      carregarServicosAdmin();
+    } else {
+      mostrarErro(resultado.erro || 'Erro ao excluir');
+    }
+  } catch (erro) {
+    mostrarErro('Erro na comunicação: ' + erro.message);
+  }
 }
 
 // ============================================
@@ -174,6 +267,7 @@ function renderizarListaAdmin() {
   servicosCache.slice(0, 5).forEach(servico => {
     const card = document.createElement('div');
     card.className = 'card-servico-admin';
+    const idEscapado = String(servico.id).replace(/'/g, "\\'");
     card.innerHTML = `
       <div class="card-header">
         <h3>${servico.titulo}</h3>
@@ -181,10 +275,13 @@ function renderizarListaAdmin() {
       </div>
       <div class="card-info">
         <p><strong>Data:</strong> ${servico.data}</p>
-        <p><strong>Valor:</strong> ${servico.valor}</p>
         <p><strong>Status:</strong> ${servico.status}</p>
       </div>
       ${servico.descricao ? `<p class="descricao">${servico.descricao}</p>` : ''}
+      <div class="card-acoes">
+        <button type="button" class="btn-acao" onclick="iniciarEdicao('${idEscapado}')">✏️ Editar</button>
+        <button type="button" class="btn-acao btn-excluir" onclick="excluirServico('${idEscapado}')">🗑️ Excluir</button>
+      </div>
     `;
     container.appendChild(card);
   });
@@ -257,7 +354,6 @@ function salvarServicoLocal(dados) {
     titulo: dados.titulo,
     descricao: dados.descricao,
     categoria: dados.categoria,
-    valor: dados.valor,
     status: 'Concluído',
     fotoAntes: dados.fotoAntes,
     fotoDepois: dados.fotoDepois
@@ -279,6 +375,35 @@ function carregarServicosLocal() {
     servicos: servicos.reverse(),
     total: servicos.length
   };
+}
+
+function editarServicoLocal(dados) {
+  const servicos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
+  const i = servicos.findIndex(s => s.id === dados.id);
+  if (i === -1) return { sucesso: false, erro: 'Serviço não encontrado' };
+
+  servicos[i].titulo = dados.titulo;
+  servicos[i].categoria = dados.categoria;
+  servicos[i].data = dados.data;
+  servicos[i].descricao = dados.descricao;
+  if (dados.fotoAntes && String(dados.fotoAntes).startsWith('data:')) {
+    servicos[i].fotoAntes = dados.fotoAntes;
+  }
+  if (dados.fotoDepois && String(dados.fotoDepois).startsWith('data:')) {
+    servicos[i].fotoDepois = dados.fotoDepois;
+  }
+
+  localStorage.setItem('servicos-mock', JSON.stringify(servicos));
+  return { sucesso: true, id: dados.id, mensagem: 'Serviço atualizado (MOCK)' };
+}
+
+function excluirServicoLocal(dados) {
+  const servicos = JSON.parse(localStorage.getItem('servicos-mock') || '[]');
+  const novos = servicos.filter(s => s.id !== dados.id);
+  if (novos.length === servicos.length) return { sucesso: false, erro: 'Serviço não encontrado' };
+
+  localStorage.setItem('servicos-mock', JSON.stringify(novos));
+  return { sucesso: true, id: dados.id, mensagem: 'Serviço excluído (MOCK)' };
 }
 
 // ============================================

@@ -8,8 +8,8 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBjDR7aa1g0JKe
 
 // Mock local para testes - funciona sem CORS
 const USAR_MOCK_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const CACHE_DURATION = 3600000; // 1 hora em ms
-const AUTO_REFRESH_INTERVAL = 3600000; // 1 hora
+const CACHE_DURATION = 0; // sem cache — sempre buscar do servidor
+const AUTO_REFRESH_INTERVAL = 30000; // 30 segundos
 
 let servicosGlobal = [];
 
@@ -86,10 +86,13 @@ function renderizarServicos() {
 
   const grupos = agruparPorMes(servicosGlobal);
 
-  grupos.forEach((grupo, grupoIdx) => {
+  const hoje = new Date();
+  const chaveMesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth()).padStart(2, '0')}`;
+
+  grupos.forEach((grupo) => {
     const details = document.createElement('details');
     details.className = 'grupo-mes';
-    if (grupoIdx === 0) details.open = true; // mais recente já aberto
+    if (grupo.chave === chaveMesAtual) details.open = true; // apenas mês atual aberto
 
     const plural = grupo.servicos.length === 1 ? 'serviço' : 'serviços';
 
@@ -123,10 +126,6 @@ function renderizarServicos() {
             <div class="meta-item">
               <span class="meta-label">Data</span>
               <span class="meta-valor">${formatarData(servico.data)}</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">Valor</span>
-              <span class="meta-valor">${formatarValor(servico.valor)}</span>
             </div>
           </div>
         </summary>
@@ -259,18 +258,6 @@ function formatarData(valor) {
     }
   }
   return str;
-}
-
-function formatarValor(valor) {
-  if (valor === null || valor === undefined || valor === '') return '—';
-  const str = String(valor).trim();
-  // Já vem formatado em R$
-  if (str.includes('R$')) return str;
-  // Tenta parsear: aceita "550", "550.00", "550,00", "1.200,50"
-  const limpo = str.replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '');
-  const numero = Number(limpo);
-  if (isNaN(numero)) return str;
-  return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function toggleFoto(index) {
