@@ -304,6 +304,7 @@ function mostrarQRCode() {
   }
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(urlMoradores)}&size=300x300`;
+  const u = urlMoradores.replace(/'/g, "\\'");
 
   const container = document.getElementById('qrContainer');
   container.innerHTML = `
@@ -311,7 +312,12 @@ function mostrarQRCode() {
       <h3>QRCode para os Moradores</h3>
       <img src="${qrUrl}" alt="QRCode">
       <p class="qr-url">${urlMoradores}</p>
-      <button onclick="copiarURL('${urlMoradores}')" class="btn-secundario">Copiar Link</button>
+      <div class="qr-acoes">
+        <button onclick="copiarURL('${u}')" class="btn-qr">🔗 Copiar Link</button>
+        <button onclick="baixarQRCode('${u}')" class="btn-qr">⬇️ Baixar</button>
+        <button onclick="compartilharQRCode('${u}')" class="btn-qr">💬 WhatsApp</button>
+        <button onclick="imprimirQRCode('${u}')" class="btn-qr">🖨️ Imprimir</button>
+      </div>
     </div>
   `;
 }
@@ -320,6 +326,85 @@ function copiarURL(url) {
   navigator.clipboard.writeText(url).then(() => {
     mostrarSucesso('Link copiado!');
   });
+}
+
+function urlQRGrande(url) {
+  return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(url)}&size=600x600&margin=20`;
+}
+
+async function baixarQRCode(url) {
+  try {
+    const response = await fetch(urlQRGrande(url));
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'qrcode-servicos-gv.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    mostrarSucesso('QRCode baixado!');
+  } catch (erro) {
+    mostrarErro('Erro ao baixar: ' + erro.message);
+  }
+}
+
+async function compartilharQRCode(url) {
+  const mensagem = `Acompanhe os serviços do condomínio:\n${url}`;
+  try {
+    if (navigator.share && navigator.canShare) {
+      const response = await fetch(urlQRGrande(url));
+      const blob = await response.blob();
+      const arquivo = new File([blob], 'qrcode-servicos-gv.png', { type: 'image/png' });
+      if (navigator.canShare({ files: [arquivo] })) {
+        await navigator.share({
+          files: [arquivo],
+          title: 'QRCode Serviços GV',
+          text: mensagem
+        });
+        return;
+      }
+    }
+  } catch (erro) {
+    if (erro.name === 'AbortError') return; // usuário cancelou
+  }
+  // Fallback: abre WhatsApp Web só com o link
+  window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
+}
+
+function imprimirQRCode(url) {
+  const janela = window.open('', '_blank', 'width=600,height=800');
+  if (!janela) {
+    mostrarErro('Bloqueador de popup impediu a impressão');
+    return;
+  }
+  janela.document.write(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>QRCode Serviços GV</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 40px 20px; color: #111; }
+          h1 { font-size: 24px; margin: 0 0 4px; }
+          .subtitulo { font-size: 14px; color: #555; margin: 0 0 28px; }
+          img { width: 420px; height: 420px; max-width: 90vw; max-height: 60vh; }
+          .url { font-size: 11px; color: #333; word-break: break-all; margin-top: 18px; }
+          @media print {
+            body { padding: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Acompanhe os Serviços</h1>
+        <p class="subtitulo">GV Gestão Predial · Aponte a câmera do celular</p>
+        <img src="${urlQRGrande(url)}" alt="QRCode">
+        <p class="url">${url}</p>
+        <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };<\/script>
+      </body>
+    </html>
+  `);
+  janela.document.close();
 }
 
 // ============================================
